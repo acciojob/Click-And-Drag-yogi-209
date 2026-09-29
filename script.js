@@ -1,44 +1,40 @@
 const container = document.querySelector('.items');
 const items = document.querySelectorAll('.item');
-
-items.forEach((item) => {
-  item.style.position = 'absolute';
-
-  item.addEventListener('mousedown', (e) => {
-    e.preventDefault();
-
-    // Calculate initial click offset inside the element
+items.forEach(item => {
+  item.addEventListener('mousedown', function(e) {
     const rect = item.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
     const shiftX = e.clientX - rect.left;
     const shiftY = e.clientY - rect.top;
+    item.style.position = 'absolute';
+    function move(e) {
+      let left = e.clientX - containerRect.left - shiftX;
+      let top = e.clientY - containerRect.top - shiftY;
 
-    function moveAt(clientX, clientY) {
-      const containerRect = container.getBoundingClientRect();
+      const maxLeft = container.clientWidth - item.offsetWidth;
+      const maxTop = container.clientHeight - item.offsetHeight;
 
-      let newLeft = clientX - shiftX - containerRect.left;
-      let newTop = clientY - shiftY - containerRect.top;
+      if (left < 0) left = 0;
+      if (top < 0) top = 0;
 
-      // Keep element strictly within container bounds
-      const maxLeft = containerRect.width - item.offsetWidth;
-      const maxTop = containerRect.height - item.offsetHeight;
+      if (left > maxLeft) left = maxLeft;
+      if (top > maxTop) top = maxTop;
 
-      newLeft = Math.max(0, Math.min(newLeft, maxLeft));
-      newTop = Math.max(0, Math.min(newTop, maxTop));
-
-      item.style.left = `${newLeft}px`;
-      item.style.top = `${newTop}px`;
+      item.style.left = left + 'px';
+      item.style.top = top + 'px';
     }
 
-    function onMouseMove(event) {
-      moveAt(event.clientX, event.clientY);
+    function stop() {
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', stop);
     }
 
-    document.addEventListener('mousemove', onMouseMove);
-
-    document.addEventListener('mouseup', () => {
-      document.removeEventListener('mousemove', onMouseMove);
-    }, { once: true });
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', stop);
   });
 
-  item.ondragstart = () => false;
+  item.ondragstart = function() {
+    return false;
+  };
+
 });
